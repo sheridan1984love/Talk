@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Main Menu - Final Edition</title>
+<style>
+*{ 
+  box-sizing:border-box; 
+  margin:0; 
+  padding:0; 
+  -webkit-tap-highlight-color: transparent; 
+}
+
+body{
+  width:100vw;
+  height:100vh;
+  overflow:hidden;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-family:Arial, sans-serif;
+  background:#000;
+}
+
+.viewport{
+  position:fixed;
+  inset:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.wrapper{
+  width:720px;
+  height:1280px;
+  transform-origin:center;
+  position:relative;
+  overflow:hidden;
+  background-color: #ffc1dc; 
+}
+
+/* شاشة التحميل */
+#loadingOverlay {
+  position: absolute;
+  inset: 0;
+  background: url("https://i.ibb.co/RpvvjWjb/Image-2025-12-27-17-43-26.jpg") center center no-repeat;
+  background-size: cover;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: 150px;
+  transition: opacity 0.8s ease;
+  cursor: pointer; /* ليشير إلى أن الشاشة قابلة للضغط */
+}
+
+.loading-container { width: 80%; text-align: center; }
+
+.loading-bar-bg {
+  width: 100%; height: 14px; background: rgba(0, 0, 0, 0.6);
+  border-radius: 10px; border: 1px solid rgba(255, 111, 177, 0.4);
+  overflow: hidden; margin-bottom: 12px;
+}
+
+.loading-bar-fill {
+  width: 0%; height: 100%;
+  background: linear-gradient(90deg, #ff9acb, #ff6fb1);
+}
+
+.loading-stats {
+  color: #fff; font-size: 22px; font-weight: bold;
+  text-shadow: 2px 2px 5px rgba(0,0,0,0.9);
+}
+
+#tapToStart {
+  display: none; color: #fff; font-size: 36px; font-weight: bold;
+  text-shadow: 0 0 20px #ff6fb1; animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+/* الفيديو */
+#bgVideo {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  min-width: 100%; min-height: 100%; width: auto; height: auto;
+  z-index: 1; object-fit: cover; opacity: 0; transition: opacity 1s ease;
+}
+
+.overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.3); z-index: 2; }
+
+.menu-container {
+  position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+  width: 85%; z-index: 3; display: flex; flex-direction: column; gap: 20px;
+  opacity: 0; transition: opacity 1s ease;
+}
+
+.menu-btn {
+  padding: 22px 0; background: linear-gradient(180deg, #ff9acb, #ff6fb1);
+  border-radius: 20px; text-align: center; font-size: 26px; font-weight: bold;
+  color: #fff; cursor: pointer; box-shadow: 0 6px 15px rgba(255, 80, 160, 0.4);
+  transition: transform 0.1s; border: 2px solid rgba(255, 255, 255, 0.3);
+  outline: none;
+}
+
+.menu-btn:active { transform: scale(0.95); }
+
+/* نافذة الإعدادات */
+#settingsModal {
+  position: absolute; inset: 0; background: rgba(0,0,0,0.7);
+  z-index: 50; display: none; justify-content: center; align-items: center;
+}
+
+.settings-box {
+  width: 80%; background: #ffd6e8; border-radius: 30px; padding: 30px;
+  border: 4px solid #ff6fb1; position: relative;
+}
+
+.settings-box h2 { text-align: center; color: #5a0036; margin-bottom: 25px; font-size: 32px; }
+
+.setting-item { margin-bottom: 25px; display: flex; flex-direction: column; gap: 10px; }
+
+.setting-item label { color: #5a0036; font-weight: bold; font-size: 20px; }
+
+.volume-slider {
+  width: 100%; height: 15px; background: #ff9acb; border-radius: 10px;
+  outline: none; appearance: none;
+}
+.volume-slider::-webkit-slider-thumb {
+  appearance: none; width: 30px; height: 30px; background: #5a0036;
+  border-radius: 50%; cursor: pointer;
+}
+
+.link-btn {
+  background: #ff6fb1; color: #fff; padding: 12px; border-radius: 12px;
+  text-align: center; text-decoration: none; font-weight: bold; margin-bottom: 5px;
+}
+
+.close-settings {
+  background: #5a0036; color: white; padding: 15px; border-radius: 15px;
+  text-align: center; cursor: pointer; font-weight: bold; margin-top: 10px;
+}
+
+.exit-btn { background: linear-gradient(180deg, #ff4d4d, #b30000); }
+
+</style>
+</head>
+<body>
+
+<div class="viewport">
+  <div class="wrapper" id="wrapper">
+    
+    <div id="loadingOverlay" onclick="startMenu()">
+      <div class="loading-container" id="loadingInfo">
+        <div class="loading-bar-bg">
+          <div class="loading-bar-fill" id="barFill"></div>
+        </div>
+        <div class="loading-stats" id="statsText">Loading Game... 1%</div>
+      </div>
+      <div id="tapToStart">TAP TO START</div>
+    </div>
+
+    <div id="settingsModal">
+      <div class="settings-box">
+        <h2>Settings</h2>
+        <div class="setting-item">
+          <label>Volume</label>
+          <input type="range" id="volRange" class="volume-slider" min="0" max="1" step="0.1" value="1" oninput="changeVolume(this.value)">
+        </div>
+        <div class="setting-item">
+          <label>Developer</label>
+          <a href="https://t.me/Porn69fans" target="_blank" class="link-btn">Porn Fans</a>
+        </div>
+        <div class="setting-item">
+          <label>More Games</label>
+          <a href="" target="_blank" class="link-btn">More Games</a>
+        </div>
+        <div class="setting-item">
+          <label>Language</label>
+          <div class="link-btn" style="background: #ccc;">English</div>
+        </div>
+        <div class="close-settings" onclick="toggleSettings(false)">Save & Close</div>
+      </div>
+    </div>
+
+    <video loop playsinline id="bgVideo">
+      <source src="https://www.dropbox.com/scl/fi/tro0qzlo79x0vshgec2k5/Background-video.mp4?rlkey=09ylr3zzzeedbmm19vbt73evd&st=g32i6cz4&dl=1" type="video/mp4">
+    </video>
+
+    <div class="overlay"></div>
+
+    <div class="menu-container" id="mainMenuUI">
+      <div class="menu-btn" onclick="goToPath('Story comic.html')">Story comic</div>
+      <div class="menu-btn" onclick="goToPath('Story game.html')">Story game</div>
+      <div class="menu-btn" onclick="goToPath('Choose Character.html')">Choose Character</div>
+      <div class="menu-btn" onclick="toggleSettings(true)">Settings</div>
+      <div class="menu-btn exit-btn" onclick="exitPage()">Exit Game</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const video = document.getElementById('bgVideo');
+const mainMenuUI = document.getElementById('mainMenuUI');
+const settingsModal = document.getElementById('settingsModal');
+const barFill = document.getElementById('barFill');
+const statsText = document.getElementById('statsText');
+const loadingOverlay = document.getElementById('loadingOverlay');
+const touchSound = new Audio("https://www.dropbox.com/scl/fi/wbhg5jqx3spvjxhxkozk9/Fap-geme-touch-effect-sonde.ogg?rlkey=ep18ldhl31olj2zx2anizoper&st=20ljm1li&dl=1");
+
+let currentVolume = 1.0;
+let isLoaded = false;
+
+// يبدأ التحميل تلقائياً عند فتح الصفحة
+function startFakeLoading() {
+    let p = 0;
+    let inv = setInterval(() => {
+        p += 1;
+        barFill.style.width = p + '%';
+        statsText.innerText = `Loading Game... ${p}%`;
+        if(p >= 100) {
+            clearInterval(inv);
+            document.getElementById('loadingInfo').style.display = 'none';
+            document.getElementById('tapToStart').style.display = 'block';
+            isLoaded = true; // الآن يمكن للمستخدم الضغط للدخول
+        }
+    }, 30);
+}
+
+function startMenu() {
+    if(!isLoaded) return; // منع الدخول قبل اكتمال الـ 100%
+    
+    playTouch();
+    loadingOverlay.style.opacity = '0';
+    setTimeout(() => {
+        loadingOverlay.style.display = 'none';
+        video.style.opacity = '1';
+        mainMenuUI.style.opacity = '1';
+        video.volume = currentVolume;
+        video.play().catch(e => {
+            console.log("Video play failed:", e);
+        });
+    }, 800);
+}
+
+function toggleSettings(show) {
+    playTouch();
+    settingsModal.style.display = show ? 'flex' : 'none';
+}
+
+function changeVolume(val) {
+    currentVolume = val;
+    video.volume = currentVolume;
+    touchSound.volume = currentVolume;
+}
+
+function playTouch() {
+  touchSound.currentTime = 0;
+  touchSound.volume = currentVolume;
+  touchSound.play().catch(e => {});
+}
+
+function exitPage() {
+    playTouch();
+    setTimeout(() => {
+        window.close();
+        history.back();
+    }, 200);
+}
+
+function goToPath(path) {
+  playTouch();
+  setTimeout(() => { window.location.href = path; }, 150);
+}
+
+function resize(){
+  const baseW=720, baseH=1280;
+  const scale=Math.max(window.innerWidth/baseW, window.innerHeight/baseH);
+  document.getElementById("wrapper").style.transform=`scale(${scale})`;
+}
+
+window.addEventListener("resize", resize);
+window.onload = () => { 
+    resize(); 
+    startFakeLoading(); 
+    document.getElementById('volRange').value = 1;
+};
+</script>
+
+</body>
+</html>
